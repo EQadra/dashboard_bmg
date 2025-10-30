@@ -1,52 +1,68 @@
 // FILE: src/stores/calculator.js
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { calcularValores } from '../utils/calculadora'
 
-
 export const useCalculatorStore = defineStore('calculator', () => {
-const inputs = ref({
-clientName: '',
-pricePerOz: '',
-exchangeRate: '',
-purity: '',
-grams: '',
-discountPercentage: '',
-tipoVenta: '0',
-})
+  // 🧮 Estado inicial
+  const inputs = ref({
+    clientName: '',
+    pricePerOz: '',
+    exchangeRate: '',
+    purity: '',
+    grams: '',
+    discountPercentage: '',
+    tipoVenta: '0',
+  })
 
+  // 💰 Moneda y tipo de cambio
+  const moneda = ref('PEN')
+  const tipoCambioBOB = ref(0.73)
 
-const moneda = ref('PEN')
-const tipoCambioBOB = ref(0.73)
+  // ✅ Setear un valor específico
+  const setValue = (key, value) => {
+    inputs.value[key] = value
+  }
 
+  // ♻️ Limpiar todos los campos
+  const clearAll = () => {
+    inputs.value = {
+      clientName: '',
+      pricePerOz: '',
+      exchangeRate: '',
+      purity: '',
+      grams: '',
+      discountPercentage: '',
+      tipoVenta: '0',
+    }
+  }
 
-const setValue = (key, value) => {
-inputs.value[key] = value
-}
+  // 🧠 Cálculos derivados
+  const computedResults = computed(() => calcularValores(inputs.value))
 
+  // 💾 (Opcional) Guardar automáticamente el estado local
+  watch(inputs, (val) => {
+    localStorage.setItem('calculatorInputs', JSON.stringify(val))
+  }, { deep: true })
 
-const clearAll = () => {
-inputs.value = {
-clientName: '',
-pricePerOz: '',
-exchangeRate: '',
-purity: '',
-grams: '',
-discountPercentage: '',
-tipoVenta: '0',
-}
-}
+  // 🔄 Cargar estado guardado al iniciar
+  const loadSavedInputs = () => {
+    const saved = localStorage.getItem('calculatorInputs')
+    if (saved) {
+      inputs.value = JSON.parse(saved)
+    }
+  }
 
+  // ⚡ Inicialización automática
+  loadSavedInputs()
 
-const computedResults = computed(() => calcularValores(inputs.value))
-
-
-return {
-inputs,
-moneda,
-tipoCambioBOB,
-setValue,
-clearAll,
-computedResults,
-}
+  return {
+    inputs,
+    moneda,
+    tipoCambioBOB,
+    computedResults,
+    setValue,
+    clearAll,
+    loadSavedInputs,
+  }
 })

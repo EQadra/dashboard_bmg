@@ -7,10 +7,19 @@ export default defineConfig({
   server: {
     host: 'localhost',
     port: 5173,
-    origin: 'http://localhost:5173',
-    cors: true,
-    headers: {
-      'Access-Control-Allow-Origin': 'http://localhost:8000',
-    }
-  }
+
+    // ✅ Redirige cualquier ruta que empiece con /api al backend Laravel
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8000', // tu backend Laravel
+        changeOrigin: true,
+        secure: false,
+      },
+      '/sanctum': {
+        target: 'http://localhost:8000', // opcional si usas autenticación con Sanctum
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
 })

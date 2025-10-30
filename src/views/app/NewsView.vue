@@ -100,6 +100,11 @@ function closeModal() {
 }
 
 async function submit() {
+  if (!form.value.titulo.trim() || !form.value.descripcion.trim()) {
+    alert('El título y la descripción son obligatorios.')
+    return
+  }
+
   if (editMode.value) {
     await store.update(selectedId.value, form.value)
   } else {

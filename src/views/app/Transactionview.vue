@@ -254,7 +254,7 @@ async function guardarTransaccion() {
       client_name: store.inputs.clientName,
     }
 
-    const { data } = await axios.post('/api/transacciones', payload)
+    const { data } = await axios.post('/api/transactions', payload)
 
     Swal.fire({
       icon: 'success',

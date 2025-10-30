@@ -57,7 +57,7 @@ const modules = reactive([
   {
     name: 'Lista Promociones',
     icon: Tag,
-    to: '/dashboard/products' // ✅ debe estar dentro de dashboard
+    to: '/dashboard/news' // ✅ debe estar dentro de dashboard
   },
   {
     name: 'Transacción',
