@@ -1,161 +1,145 @@
 <template>
-  <div
-    :style="{
-      background: darkMode
-        ? 'linear-gradient(180deg, #0a1a2f, #1e3c72)'
-        : 'linear-gradient(180deg, #1e3a8a, #2563eb)',
-      minHeight: '100vh',
-      padding: '20px',
-      color: '#fff',
-      fontFamily: 'Inter, sans-serif',
-    }"
-  >
-    <div class="max-w-lg mx-auto flex flex-col gap-4">
-      <!-- Título -->
-      <h1 class="text-center font-bold text-2xl">💰 Calculadora de Oro</h1>
+  <div class="min-h-screen bg-white text-slate-800 font-[Inter] p-8">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
+      
+      <!-- IZQUIERDA: FORMULARIO -->
+      <div class="flex flex-col gap-6">
+        <h1 class="text-3xl font-bold text-blue-800 mb-2">Calculadora de Oro</h1>
+        <p class="text-slate-500 mb-4">Gestión de cotización y transacciones</p>
 
-      <!-- Ticker -->
-      <div class="bg-yellow-400 p-2 rounded-lg overflow-hidden">
+        <div class="bg-white border rounded-2xl shadow p-6 space-y-5">
+
+          <!-- Cliente -->
+          <div>
+            <label class="font-semibold text-slate-700">Cliente / Empresa</label>
+            <input
+              v-model="store.inputs.clientName"
+              placeholder="Nombre del cliente"
+              class="w-full border rounded-lg p-2 mt-1 focus:outline-blue-500"
+            />
+          </div>
+
+          <!-- Tipo de Venta -->
+          <div>
+            <label class="font-semibold text-slate-700">Tipo de Venta</label>
+            <div class="flex gap-3 mt-2">
+              <button
+                v-for="val in ['0', '1']"
+                :key="val"
+                @click="store.setValue('tipoVenta', val)"
+                class="flex-1 py-2 rounded-lg border font-semibold transition"
+                :class="store.inputs.tipoVenta === val
+                  ? 'bg-blue-600 text-white'
+                  : 'border-blue-600 text-blue-600 hover:bg-blue-50'"
+              >
+                {{ val === '0' ? 'Regular' : 'Empresa' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Moneda -->
+          <div>
+            <label class="font-semibold text-slate-700">Moneda</label>
+            <div class="flex gap-3 mt-2">
+              <button
+                v-for="val in ['PEN', 'BOB']"
+                :key="val"
+                @click="store.moneda = val"
+                class="flex-1 py-2 rounded-lg border font-semibold transition"
+                :class="store.moneda === val
+                  ? 'bg-green-600 text-white'
+                  : 'border-green-600 text-green-600 hover:bg-green-50'"
+              >
+                {{ val === 'PEN' ? 'Soles (PEN)' : 'Bolivianos (BOB)' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Campos numéricos -->
+          <div class="grid grid-cols-2 gap-4">
+            <div v-for="(label, key) in fieldLabels" :key="key">
+              <label class="font-semibold text-slate-700">{{ label }}</label>
+              <input
+                v-model="store.inputs[key]"
+                :placeholder="placeholders[key]"
+                type="number"
+                step="any"
+                class="w-full border rounded-lg p-2 mt-1 focus:outline-blue-500"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DERECHA: RESULTADOS Y ACCIONES -->
+      <div class="flex flex-col gap-6">
+        <!-- Resultados -->
         <div
-          ref="ticker"
-          :style="{ transform: `translateX(-${offset}px)`, transition: 'transform 0.05s linear', color: '#000', fontWeight: 'bold', whiteSpace: 'nowrap' }"
+          v-if="store.computedResults.valido"
+          class="bg-white border rounded-2xl shadow p-6"
         >
-          <span v-for="(item, i) in repeatedTicker" :key="i" class="mr-4">
-            {{ item }} •••
-          </span>
-        </div>
-      </div>
-
-      <!-- Formulario -->
-      <div class="bg-[#000033] border-2 border-yellow-400 rounded-2xl p-4 space-y-3">
-        <!-- Cliente -->
-        <div>
-          <label class="font-bold text-white">Cliente / Empresa</label>
-          <input
-            v-model="store.inputs.clientName"
-            placeholder="Nombre del cliente"
-            class="w-full bg-black text-green-400 border border-green-400 rounded-md p-2"
-          />
+          <h2 class="text-xl font-bold text-blue-700 mb-4">Resultados</h2>
+          <ul class="space-y-2 text-sm">
+            <li><strong>Precio x gr ({{ store.moneda }}):</strong> {{ formatNumber(store.precioGramo) }}</li>
+            <li><strong>Gramos:</strong> {{ formatNumber(store.inputs.grams) }}</li>
+            <li><strong>Total ({{ store.moneda }}):</strong> {{ formatNumber(store.totalMoneda) }}</li>
+          </ul>
         </div>
 
-        <!-- Tipo de venta -->
-        <div class="flex gap-2">
+        <!-- Botones -->
+        <div class="flex flex-wrap gap-3">
           <button
-            v-for="val in ['0', '1']"
-            :key="val"
-            @click="store.setValue('tipoVenta', val)"
-            class="flex-1 py-2 rounded-lg font-bold border border-yellow-400 transition"
-            :style="{
-              backgroundColor: store.inputs.tipoVenta === val ? '#FFD700' : 'transparent',
-              color: store.inputs.tipoVenta === val ? '#000' : '#FFD700',
-            }"
+            @click="store.clearAll"
+            class="flex-1 py-3 bg-slate-200 rounded-lg font-bold hover:bg-slate-300"
           >
-            {{ val === '0' ? 'Venta Regular' : 'Venta Empresa' }}
+            Limpiar
+          </button>
+          <button
+            @click="store.saveGoldCalculation"
+            :disabled="loading"
+            class="flex-1 py-3 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 disabled:opacity-50"
+          >
+            {{ loading ? 'Guardando...' : 'Guardar' }}
+          </button>
+          <button
+            @click="showModal = true"
+            :disabled="!store.computedResults.valido"
+            class="flex-1 py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 disabled:opacity-50"
+          >
+            Ver Recibo
           </button>
         </div>
 
-        <!-- Moneda -->
-        <div class="flex gap-2">
-          <button
-            v-for="val in ['PEN', 'BOB']"
-            :key="val"
-            @click="store.moneda = val"
-            class="flex-1 py-2 rounded-lg font-bold border border-yellow-400 transition"
-            :style="{
-              backgroundColor: store.moneda === val ? '#FFD700' : 'transparent',
-              color: store.moneda === val ? '#000' : '#FFD700',
-            }"
-          >
-            {{ val === 'PEN' ? 'Soles (PEN)' : 'Bolivianos (BOB)' }}
-          </button>
+        <!-- Mensajes -->
+        <div v-if="store.success" class="p-3 bg-green-100 text-green-800 rounded-lg text-sm">
+          {{ store.success }}
         </div>
-
-        <!-- Inputs dinámicos -->
-        <div v-for="(label, key) in fieldLabels" :key="key">
-          <label class="font-bold text-white">{{ label }}</label>
-          <input
-            v-model="store.inputs[key]"
-            :placeholder="placeholders[key]"
-            class="w-full bg-black text-green-400 border border-green-400 rounded-md p-2"
-          />
+        <div v-if="store.error" class="p-3 bg-red-100 text-red-800 rounded-lg text-sm">
+          {{ store.error }}
         </div>
-      </div>
-
-      <!-- Resultados -->
-      <div
-        v-if="store.computedResults.valido"
-        class="bg-[#f8fafc] text-[#1e293b] border-2 border-blue-700 rounded-2xl p-4"
-      >
-        <p><strong>💲 Precio x gr ({{ store.moneda }}):</strong> {{ formatNumber(precioGramo) }}</p>
-        <p><strong>🧾 Total ({{ store.moneda }}):</strong> {{ formatNumber(totalMoneda) }}</p>
-      </div>
-
-      <!-- Botones -->
-      <div class="flex flex-wrap gap-3 mt-4">
-        <button
-          @click="store.clearAll"
-          class="flex-1 py-3 bg-blue-800 text-white rounded-lg font-bold hover:bg-blue-900"
-        >
-          Limpiar
-        </button>
-
-        <button
-          @click="guardarTransaccion"
-          class="flex-1 py-3 bg-green-500 text-black rounded-lg font-bold hover:bg-green-600"
-        >
-          💾 Guardar Transacción
-        </button>
-
-        <button
-          @click="showModal = true"
-          class="flex-1 py-3 bg-yellow-400 text-black rounded-lg font-bold hover:bg-yellow-500"
-        >
-          🧾 Ver Recibo
-        </button>
       </div>
     </div>
 
-    <!-- Modal Recibo -->
-    <div
-      v-if="showModal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center"
-    >
-      <div class="bg-white text-gray-800 rounded-xl p-6 w-11/12 max-w-sm border border-gray-300">
-        <h3 class="text-center font-bold text-lg mb-2">🧾 Recibo Calculado</h3>
-        <hr class="border-dashed border-gray-400 mb-2" />
+    <!-- MODAL RECIBO -->
+    <div v-if="showModal" class="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
+      <div class="bg-white rounded-xl p-6 w-11/12 max-w-md shadow-lg">
+        <h3 class="text-center font-bold text-lg mb-2">Recibo Calculado</h3>
+        <hr class="my-3" />
 
-        <p v-if="store.inputs.clientName"><strong>👤 Cliente:</strong> {{ store.inputs.clientName }}</p>
+        <p v-if="store.inputs.clientName"><strong>Cliente:</strong> {{ store.inputs.clientName }}</p>
         <p><strong>Tipo Venta:</strong> {{ store.inputs.tipoVenta === '0' ? 'Regular' : 'Empresa' }}</p>
         <p><strong>Moneda:</strong> {{ store.moneda }}</p>
-
-        <hr class="border-dashed border-gray-400 my-2" />
-
-        <p><strong>💲 Precio x gr:</strong> {{ formatNumber(precioGramo) }}</p>
-        <p><strong>⚖️ Gramos:</strong> {{ formatNumber(store.inputs.grams) }}</p>
-        <p><strong>🧾 Total:</strong> {{ formatNumber(totalMoneda) }}</p>
-
-        <hr class="border-dashed border-gray-400 my-2" />
-        <p class="text-center text-sm text-gray-500">Gracias por su compra</p>
+        <hr class="my-3" />
+        <p><strong>Precio x gr:</strong> {{ formatNumber(store.precioGramo) }}</p>
+        <p><strong>Gramos:</strong> {{ formatNumber(store.inputs.grams) }}</p>
+        <p><strong>Total:</strong> {{ formatNumber(store.totalMoneda) }} {{ store.moneda }}</p>
+        <hr class="my-3" />
+        <p class="text-center text-sm text-slate-500">Gracias por su compra</p>
 
         <div class="flex gap-2 mt-4">
-          <button
-            @click="showModal = false"
-            class="flex-1 bg-blue-700 text-white rounded-lg py-2"
-          >
-            Cerrar
-          </button>
-          <button
-            @click="imprimirRecibo"
-            class="flex-1 bg-gray-200 text-black rounded-lg py-2"
-          >
-            Imprimir
-          </button>
-          <button
-            @click="copiarRecibo"
-            class="flex-1 bg-yellow-400 text-black rounded-lg py-2"
-          >
-            Copiar
-          </button>
+          <button @click="showModal = false" class="flex-1 bg-blue-600 text-white rounded-lg py-2">Cerrar</button>
+          <button @click="imprimirRecibo" class="flex-1 bg-slate-200 rounded-lg py-2">Imprimir</button>
+          <button @click="copiarRecibo" class="flex-1 bg-yellow-400 text-black rounded-lg py-2">Copiar</button>
         </div>
       </div>
     </div>
@@ -163,47 +147,16 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
-import { useCalculatorStore } from '../../stores/useCalculatorStore'
+import { ref } from 'vue'
+import { useTransactionsStore } from '../../stores/useTransactionsStore'
 import { formatNumber } from '../../utils/format'
 import Swal from 'sweetalert2'
-import axios from 'axios'
 
-const props = defineProps({ darkMode: Boolean })
-const store = useCalculatorStore()
+const store = useTransactionsStore()
 const showModal = ref(false)
-const ticker = ref(null)
-const offset = ref(0)
-let intervalId
+const loading = ref(false)
 
-// 📰 Noticias en el ticker
-const noticias = [
-  'Precio del oro sube un 2% esta semana',
-  'El dólar se mantiene estable en Perú',
-  'Nueva normativa para empresas exportadoras de oro',
-]
-const repeatedTicker = [...noticias, ...noticias]
-
-onMounted(() => {
-  intervalId = setInterval(() => {
-    offset.value = (offset.value + 2) % 600
-  }, 40)
-})
-onBeforeUnmount(() => clearInterval(intervalId))
-
-// 💰 Cálculos automáticos
-const precioGramo = computed(() => {
-  return store.moneda === 'PEN'
-    ? store.computedResults.pricePerGramPEN
-    : store.computedResults.pricePerGramPEN * store.tipoCambioBOB
-})
-const totalMoneda = computed(() => {
-  return store.moneda === 'PEN'
-    ? store.computedResults.totalPEN
-    : store.computedResults.totalPEN * store.tipoCambioBOB
-})
-
-// 📋 Etiquetas de campos
+// Etiquetas y placeholders
 const fieldLabels = {
   pricePerOz: 'Precio Onza (USD)',
   exchangeRate: 'Tipo Cambio (USD → PEN)',
@@ -211,6 +164,7 @@ const fieldLabels = {
   discountPercentage: 'Descuento (%)',
   grams: 'Gramos',
 }
+
 const placeholders = {
   pricePerOz: 'Ej: 1980.45',
   exchangeRate: 'Ej: 3.75',
@@ -219,63 +173,23 @@ const placeholders = {
   grams: 'Ej: 10',
 }
 
-// 🖨️ Imprimir y Copiar Recibo
+// Imprimir
 const imprimirRecibo = () => window.print()
+
+// Copiar al portapapeles
 const copiarRecibo = () => {
-  const hora = new Date().toLocaleString()
+  const hora = new Date().toLocaleString('es-PE')
   const text = `
--------Recibo Calculado--------
-Cliente: ${store.inputs.clientName || 'N/A'}
-${hora}
----------------------------
-Precio x gr: ${formatNumber(precioGramo.value)}
+------- RECIBO -------
+Cliente: ${store.inputs.clientName || 'N/A'} - ${hora}
+---------------------
+Precio x gr: ${formatNumber(store.precioGramo)} ${store.moneda}
 Gramos: ${formatNumber(store.inputs.grams)}
----------------------------
-Total: ${formatNumber(totalMoneda.value)}
----------------------------
+Total: ${formatNumber(store.totalMoneda)} ${store.moneda}
 Gracias por su compra
-Este comprobante no es válido para efectos fiscales
   `.trim()
+
   navigator.clipboard.writeText(text)
-  Swal.fire('✅ Copiado', 'Recibo copiado al portapapeles', 'success')
-}
-
-// 💾 Guardar Transacción
-async function guardarTransaccion() {
-  try {
-    const payload = {
-      grams: store.inputs.grams,
-      purity: store.inputs.purity,
-      discount_percentage: store.inputs.discountPercentage,
-      price_per_oz: store.inputs.pricePerOz,
-      exchange_rate: store.inputs.exchangeRate,
-      moneda: store.moneda,
-      tipo_venta: store.inputs.tipoVenta,
-      client_name: store.inputs.clientName,
-    }
-
-    const { data } = await axios.post('/api/transactions', payload)
-
-    Swal.fire({
-      icon: 'success',
-      title: 'Transacción guardada correctamente 🎉',
-      text: `ID: ${data.data.id}`,
-      timer: 2000,
-      showConfirmButton: false,
-    })
-  } catch (err) {
-    Swal.fire({
-      icon: 'error',
-      title: 'Error al guardar transacción',
-      text: err.response?.data?.message || err.message,
-    })
-  }
+  Swal.fire('Copiado', 'Recibo copiado al portapapeles', 'success')
 }
 </script>
-
-<style scoped>
-input:focus {
-  outline: none;
-  box-shadow: 0 0 6px #00ff99;
-}
-</style>

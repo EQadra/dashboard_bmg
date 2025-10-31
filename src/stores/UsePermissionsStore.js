@@ -1,25 +1,15 @@
+// src/stores/usePermissionsStore.js
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { useAxios, setupAxios } from '../plugins/axios'
+import { getCsrfToken } from '../utils/csrf' // ✅ Usa el helper global
 
 let api
-
-// 🧩 Inicializa Axios de forma segura (por si el plugin aún no fue cargado)
 try {
   api = useAxios()
 } catch {
-  console.warn('⚠️ Axios no inicializado. Configurando automáticamente desde el store...')
+  console.warn('⚠️ Axios no inicializado, configurando automáticamente...')
   api = setupAxios()
-}
-
-/** 🔒 Obtener cookie CSRF desde Laravel Sanctum */
-async function getCsrfToken() {
-  try {
-    await api.get('/sanctum/csrf-cookie') // genera la cookie XSRF-TOKEN
-    console.log('✅ CSRF cookie obtenida correctamente')
-  } catch (error) {
-    console.error('❌ Error al obtener CSRF cookie:', error)
-  }
 }
 
 export const usePermissionsStore = defineStore('permissions', () => {
@@ -43,7 +33,7 @@ export const usePermissionsStore = defineStore('permissions', () => {
       return permissions.value
     } catch (err) {
       console.error('❌ Error al cargar permisos:', err)
-      error.value = 'Error al cargar permisos'
+      error.value = err.response?.data?.message || 'Error al cargar permisos'
       throw err
     } finally {
       loading.value = false
@@ -52,8 +42,9 @@ export const usePermissionsStore = defineStore('permissions', () => {
 
   const createPermission = async (name) => {
     loading.value = true
+    error.value = null
     try {
-      await getCsrfToken()
+      await getCsrfToken() // ✅ Reemplaza ensureCsrfToken
       const res = await api.post('/api/permisos', { name })
       const created = normalize(res)
       if (created && created.id) permissions.value.push(created)
@@ -61,6 +52,7 @@ export const usePermissionsStore = defineStore('permissions', () => {
       return created
     } catch (err) {
       console.error('❌ Error al crear permiso:', err)
+      error.value = err.response?.data?.message || 'Error al crear permiso'
       throw err
     } finally {
       loading.value = false
@@ -69,6 +61,7 @@ export const usePermissionsStore = defineStore('permissions', () => {
 
   const deletePermission = async (id) => {
     loading.value = true
+    error.value = null
     try {
       await getCsrfToken()
       await api.delete(`/api/permisos/${id}`)
@@ -77,6 +70,7 @@ export const usePermissionsStore = defineStore('permissions', () => {
       return true
     } catch (err) {
       console.error('❌ Error al eliminar permiso:', err)
+      error.value = err.response?.data?.message || 'Error al eliminar permiso'
       throw err
     } finally {
       loading.value = false
@@ -84,10 +78,9 @@ export const usePermissionsStore = defineStore('permissions', () => {
   }
 
   // ======= ROLES Y ASIGNACIÓN DE PERMISOS =======
-
-  /** ✅ Obtener roles con sus permisos */
   const fetchRolesWithPermissions = async () => {
     loading.value = true
+    error.value = null
     try {
       const res = await api.get('/api/roles-permissions')
       roles.value = normalize(res)
@@ -95,30 +88,31 @@ export const usePermissionsStore = defineStore('permissions', () => {
       return roles.value
     } catch (err) {
       console.error('❌ Error al cargar roles:', err)
-      error.value = 'Error al cargar roles'
+      error.value = err.response?.data?.message || 'Error al cargar roles'
       throw err
     } finally {
       loading.value = false
     }
   }
 
-  /** ✅ Obtener permisos de un rol específico */
   const fetchRolePermissions = async (roleId) => {
     loading.value = true
+    error.value = null
     try {
       const res = await api.get(`/api/roles/${roleId}/permissions`)
       return normalize(res)
     } catch (err) {
       console.error('❌ Error al cargar permisos del rol:', err)
+      error.value = err.response?.data?.message || 'Error al cargar permisos del rol'
       throw err
     } finally {
       loading.value = false
     }
   }
 
-  /** ✅ Actualizar los permisos asignados a un rol */
   const updateRolePermissions = async (roleId, permissionsList) => {
     loading.value = true
+    error.value = null
     try {
       await getCsrfToken()
       const res = await api.put(`/api/roles/${roleId}/permissions`, {
@@ -126,7 +120,6 @@ export const usePermissionsStore = defineStore('permissions', () => {
       })
       const updated = normalize(res)
 
-      // 🔄 Actualiza el rol en memoria
       const idx = roles.value.findIndex((r) => r.id === roleId)
       if (idx !== -1) roles.value[idx].permissions = updated
 
@@ -134,6 +127,7 @@ export const usePermissionsStore = defineStore('permissions', () => {
       return updated
     } catch (err) {
       console.error('❌ Error al actualizar permisos del rol:', err)
+      error.value = err.response?.data?.message || 'Error al actualizar permisos del rol'
       throw err
     } finally {
       loading.value = false

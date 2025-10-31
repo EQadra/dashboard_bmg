@@ -1,5 +1,6 @@
-// src/stores/useCashRegisterStore.js
+// FILE: src/stores/useCashRegisterStore.js
 import { defineStore } from 'pinia'
+import { getCsrfToken } from '../utils/csrf'
 import { useAxios, setupAxios } from '../plugins/axios'
 
 let api
@@ -19,7 +20,8 @@ export const useCashRegisterStore = defineStore('cashRegister', {
 
   getters: {
     /** ✅ Saber si hay caja abierta hoy */
-    isOpen: (state) => !!state.cashRegister && !state.cashRegister.closing_cash_pen,
+    isOpen: (state) =>
+      !!state.cashRegister && !state.cashRegister.closing_cash_pen,
   },
 
   actions: {
@@ -32,7 +34,9 @@ export const useCashRegisterStore = defineStore('cashRegister', {
         this.cashRegister = res.data.data
       } catch (err) {
         this.cashRegister = null
-        this.error = err.response?.data?.message || 'Error al cargar caja actual'
+        this.error =
+          err.response?.data?.message || 'Error al cargar caja actual'
+        console.error('❌ Error fetchToday:', err)
       } finally {
         this.loading = false
       }
@@ -46,12 +50,16 @@ export const useCashRegisterStore = defineStore('cashRegister', {
      * @param {number} [data.opening_cash_usd]
      * @param {number} data.opening_gold
      */
-    async openCash({ opening_cash_pen, opening_cash_bob = 0, opening_cash_usd = 0, opening_gold }) {
+    async openCash({
+      opening_cash_pen,
+      opening_cash_bob = 0,
+      opening_cash_usd = 0,
+      opening_gold,
+    }) {
       this.loading = true
       this.error = null
       try {
-        // Obtener CSRF
-        await api.get('/sanctum/csrf-cookie')
+        await getCsrfToken() // ✅ se usa la utilidad global
         const res = await api.post('/api/caja/abrir', {
           opening_cash_pen,
           opening_cash_bob,
@@ -59,9 +67,12 @@ export const useCashRegisterStore = defineStore('cashRegister', {
           opening_gold,
         })
         this.cashRegister = res.data.data
+        return this.cashRegister
       } catch (err) {
-        this.error = err.response?.data?.message || 'Error al abrir la caja'
-        throw this.error
+        this.error =
+          err.response?.data?.message || 'Error al abrir la caja'
+        console.error('❌ Error openCash:', err)
+        throw err
       } finally {
         this.loading = false
       }
@@ -75,12 +86,16 @@ export const useCashRegisterStore = defineStore('cashRegister', {
      * @param {number} [data.closing_cash_usd]
      * @param {number} data.closing_gold
      */
-    async closeCash({ closing_cash_pen, closing_cash_bob = 0, closing_cash_usd = 0, closing_gold }) {
+    async closeCash({
+      closing_cash_pen,
+      closing_cash_bob = 0,
+      closing_cash_usd = 0,
+      closing_gold,
+    }) {
       this.loading = true
       this.error = null
       try {
-        // Obtener CSRF
-        await api.get('/sanctum/csrf-cookie')
+        await getCsrfToken() // ✅ unificado
         const res = await api.post('/api/caja/cerrar', {
           closing_cash_pen,
           closing_cash_bob,
@@ -88,9 +103,12 @@ export const useCashRegisterStore = defineStore('cashRegister', {
           closing_gold,
         })
         this.cashRegister = res.data.data
+        return this.cashRegister
       } catch (err) {
-        this.error = err.response?.data?.message || 'Error al cerrar la caja'
-        throw this.error
+        this.error =
+          err.response?.data?.message || 'Error al cerrar la caja'
+        console.error('❌ Error closeCash:', err)
+        throw err
       } finally {
         this.loading = false
       }
