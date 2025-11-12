@@ -1,15 +1,8 @@
 // FILE: src/stores/useCashRegisterStore.js
 import { defineStore } from 'pinia'
 import { getCsrfToken } from '../utils/csrf'
-import { useAxios, setupAxios } from '../plugins/axios'
-
-let api
-try {
-  api = useAxios()
-} catch {
-  console.warn('⚠️ Axios no inicializado. Configurando automáticamente...')
-  api = setupAxios()
-}
+import { useAxios } from '../plugins/axios' // ✅ solo esto
+const api = useAxios() // ✅ usa la instancia global creada en main.js
 
 export const useCashRegisterStore = defineStore('cashRegister', {
   state: () => ({
@@ -19,13 +12,11 @@ export const useCashRegisterStore = defineStore('cashRegister', {
   }),
 
   getters: {
-    /** ✅ Saber si hay caja abierta hoy */
     isOpen: (state) =>
       !!state.cashRegister && !state.cashRegister.closing_cash_pen,
   },
 
   actions: {
-    /** 🔹 Obtener la caja del día actual */
     async fetchToday() {
       this.loading = true
       this.error = null
@@ -42,14 +33,6 @@ export const useCashRegisterStore = defineStore('cashRegister', {
       }
     },
 
-    /**
-     * 🔹 Abrir una nueva caja
-     * @param {Object} data
-     * @param {number} data.opening_cash_pen
-     * @param {number} [data.opening_cash_bob]
-     * @param {number} [data.opening_cash_usd]
-     * @param {number} data.opening_gold
-     */
     async openCash({
       opening_cash_pen,
       opening_cash_bob = 0,
@@ -59,7 +42,7 @@ export const useCashRegisterStore = defineStore('cashRegister', {
       this.loading = true
       this.error = null
       try {
-        await getCsrfToken() // ✅ se usa la utilidad global
+        await getCsrfToken()
         const res = await api.post('/api/caja/abrir', {
           opening_cash_pen,
           opening_cash_bob,
@@ -78,14 +61,6 @@ export const useCashRegisterStore = defineStore('cashRegister', {
       }
     },
 
-    /**
-     * 🔹 Cerrar la caja actual
-     * @param {Object} data
-     * @param {number} data.closing_cash_pen
-     * @param {number} [data.closing_cash_bob]
-     * @param {number} [data.closing_cash_usd]
-     * @param {number} data.closing_gold
-     */
     async closeCash({
       closing_cash_pen,
       closing_cash_bob = 0,
@@ -95,7 +70,7 @@ export const useCashRegisterStore = defineStore('cashRegister', {
       this.loading = true
       this.error = null
       try {
-        await getCsrfToken() // ✅ unificado
+        await getCsrfToken()
         const res = await api.post('/api/caja/cerrar', {
           closing_cash_pen,
           closing_cash_bob,

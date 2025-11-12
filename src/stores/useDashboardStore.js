@@ -1,6 +1,9 @@
 // src/stores/dashboard.js
 import { defineStore } from 'pinia'
-import axios from 'axios'
+import { useAxios } from '../plugins/axios'
+import { getCsrfToken } from '../utils/csrf'
+
+const api = useAxios()
 
 export const useDashboardStore = defineStore('dashboard', {
   state: () => ({
@@ -12,21 +15,17 @@ export const useDashboardStore = defineStore('dashboard', {
   }),
 
   actions: {
+    /** 🔹 Cargar datos del dashboard */
     async fetchDashboardData() {
       this.loading = true
       this.error = null
 
       console.group('%c📊 DASHBOARD FETCH START', 'color: #16a34a; font-weight: bold;')
       try {
-        const token = localStorage.getItem('token')
-        console.log('🔑 Token usado:', token ? '(token presente)' : '(sin token)')
+        // ✅ Asegura cookie CSRF si usas Sanctum
+        await getCsrfToken()
 
-        const { data } = await axios.get('/api/admin/dashboard', {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-
-        // 📦 Log completo del backend
-        console.log('📥 Respuesta completa del backend:', data)
+        const { data } = await api.get('/api/admin/dashboard')
 
         // ✅ Asignaciones con fallback
         this.goldPrices = data.goldPrices || []
@@ -45,16 +44,13 @@ export const useDashboardStore = defineStore('dashboard', {
       }
     },
 
+    /** 🔹 Cargar reportes administrativos */
     async fetchReportes() {
       console.group('%c📄 FETCH REPORTES', 'color: #2563eb; font-weight: bold;')
       try {
-        const token = localStorage.getItem('token')
-        console.log('🔑 Token usado:', token ? '(token presente)' : '(sin token)')
+        await getCsrfToken() // opcional si backend requiere cookie activa
 
-        const { data } = await axios.get('/api/reportes', {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-
+        const { data } = await api.get('/api/reportes')
         console.log('📥 Respuesta de /api/reportes:', data)
         console.groupEnd()
         return data
