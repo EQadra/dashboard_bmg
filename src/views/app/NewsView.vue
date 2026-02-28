@@ -1,27 +1,74 @@
 <template>
-  <div class="container">
-    <h2 class="title">📰 Gestión de Noticias</h2>
+  <div class="min-h-screen bg-[#0b1a33] text-slate-100 font-[Inter] p-8">
+    <div class="max-w-7xl mx-auto">
 
-    <!-- Botón para crear -->
-    <button @click="openCreate" class="btn-primary">Agregar noticia</button>
+      <h2 class="text-2xl font-bold text-blue-300 tracking-tight mb-4">
+        📰 Gestión de Noticias
+      </h2>
 
-    <!-- Listado -->
-    <div v-if="store.news.length === 0" class="empty">No hay noticias registradas.</div>
+      <!-- Botón crear -->
+      <button
+        @click="openCreate"
+        class="mb-6 bg-blue-600 hover:bg-blue-700 transition
+               text-white px-5 py-2 rounded-lg font-semibold shadow"
+      >
+        Agregar noticia
+      </button>
 
-    <div v-else class="news-grid">
-      <div v-for="item in store.news" :key="item.id" class="news-card">
-        <div>
-          <h3 class="news-title">{{ item.titulo }}</h3>
-          <p class="news-desc">{{ item.descripcion }}</p>
-          <p class="news-meta">
-            📅 {{ formatDate(item.fecha_publicacion) }} |
-            🔗 <a :href="item.url" target="_blank" class="news-link">{{ item.url }}</a>
-          </p>
-        </div>
+      <!-- Vacío -->
+      <div
+        v-if="store.news.length === 0"
+        class="text-slate-400 italic mt-6"
+      >
+        No hay noticias registradas.
+      </div>
 
-        <div class="card-actions">
-          <button @click="edit(item)" class="link edit">Editar</button>
-          <button @click="del(item.id)" class="link delete">Eliminar</button>
+      <!-- Grid -->
+      <div v-else class="grid gap-6 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
+        <div
+          v-for="item in store.news"
+          :key="item.id"
+          class="bg-[#12244a] border border-white/10 rounded-2xl shadow-lg
+                 p-5 flex flex-col justify-between transition hover:shadow-xl"
+        >
+          <div>
+            <h3 class="text-lg font-bold text-slate-100 mb-1">
+              {{ item.titulo }}
+            </h3>
+
+            <p class="text-slate-300 text-sm mt-2">
+              {{ item.descripcion }}
+            </p>
+
+            <p class="text-slate-400 text-xs mt-3 break-all">
+              📅 {{ formatDate(item.fecha_publicacion) }}
+              <br />
+              🔗
+              <a
+                :href="item.url"
+                target="_blank"
+                class="text-blue-400 hover:text-blue-300 underline"
+              >
+                {{ item.url }}
+              </a>
+            </p>
+          </div>
+
+          <!-- Acciones -->
+          <div class="flex justify-between items-center mt-4 text-sm">
+            <button
+              @click="edit(item)"
+              class="text-blue-400 hover:text-blue-300 underline"
+            >
+              Editar
+            </button>
+            <button
+              @click="del(item.id)"
+              class="text-red-400 hover:text-red-300 underline"
+            >
+              Eliminar
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -32,19 +79,48 @@
       @close="closeModal"
       :title="editMode ? 'Editar noticia' : 'Crear noticia'"
     >
-      <form @submit.prevent="submit">
-        <input v-model="form.titulo" placeholder="Título" required class="input" />
+      <form @submit.prevent="submit" class="space-y-3">
+        <input
+          v-model="form.titulo"
+          placeholder="Título"
+          required
+          class="w-full bg-[#0b1a33] border border-white/10 rounded-lg
+                 p-2 text-slate-100 placeholder:text-slate-500
+                 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+
         <textarea
           v-model="form.descripcion"
           placeholder="Descripción"
           rows="3"
           required
-          class="input"
+          class="w-full bg-[#0b1a33] border border-white/10 rounded-lg
+                 p-2 text-slate-100 placeholder:text-slate-500
+                 focus:outline-none focus:ring-2 focus:ring-blue-500"
         ></textarea>
-        <input v-model="form.url" placeholder="URL" type="url" class="input" />
-        <input v-model="form.fecha_publicacion" type="date" class="input" />
 
-        <button class="btn-primary" type="submit">
+        <input
+          v-model="form.url"
+          placeholder="URL"
+          type="url"
+          class="w-full bg-[#0b1a33] border border-white/10 rounded-lg
+                 p-2 text-slate-100 placeholder:text-slate-500
+                 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+
+        <input
+          v-model="form.fecha_publicacion"
+          type="date"
+          class="w-full bg-[#0b1a33] border border-white/10 rounded-lg
+                 p-2 text-slate-100
+                 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+
+        <button
+          type="submit"
+          class="w-full bg-blue-600 hover:bg-blue-700 transition
+                 text-white py-2 rounded-lg font-semibold mt-2"
+        >
           {{ editMode ? 'Actualizar' : 'Crear' }}
         </button>
       </form>
@@ -126,6 +202,7 @@ function formatDate(dateStr) {
 
 onMounted(() => store.fetchAll())
 </script>
+
 
 <style scoped>
 .container {

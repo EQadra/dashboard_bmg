@@ -31,12 +31,14 @@ onMounted(async () => {
 })
 
 // 📜 Cargar permisos de un rol
+// 📜 Cargar permisos de un rol
 const loadRolePermissions = async (role) => {
   selectedRole.value = role
   loadingPermissions.value = true
   logs.value = `🔄 Cargando permisos de "${role.name}"...`
   try {
-    rolePermissions.value = await rolesStore.fetchRolePermissions(role.id)
+    // ⚠️ Usar permissionsStore, no rolesStore
+    rolePermissions.value = await permissionsStore.fetchRolePermissions(role.id)
     logs.value = `✅ Permisos cargados para "${role.name}"`
     Swal.fire({
       icon: 'info',
@@ -83,7 +85,7 @@ const togglePermission = async (permissionName) => {
   loadingPermissions.value = true
   try {
     if (hasPermission) {
-      await rolesStore.revokePermission(selectedRole.value.id, permissionName)
+      await permissionsStore.revokePermission(selectedRole.value.id, permissionName)
       rolePermissions.value = rolePermissions.value.filter((p) => p !== permissionName)
       Swal.fire({
         icon: 'success',
@@ -94,7 +96,7 @@ const togglePermission = async (permissionName) => {
       })
       logs.value = `🚫 Permiso "${permissionName}" revocado de "${selectedRole.value.name}"`
     } else {
-      await rolesStore.assignPermission(selectedRole.value.id, permissionName)
+      await permissionsStore.assignPermission(selectedRole.value.id, permissionName)
       rolePermissions.value.push(permissionName)
       Swal.fire({
         icon: 'success',
@@ -116,6 +118,7 @@ const togglePermission = async (permissionName) => {
     loadingPermissions.value = false
   }
 }
+
 </script>
 
 <template>

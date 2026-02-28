@@ -1,58 +1,87 @@
 <template>
-  <div class="p-6 bg-gradient-to-b from-blue-50 to-blue-100 min-h-screen font-sans">
-    <h1 class="text-2xl font-bold text-blue-900 mb-6 flex items-center gap-2">
-      💰 Transacciones del Día
-      <button @click="fetch" class="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
-        🔄
+  <div class="min-h-screen bg-[#0b1a33] text-slate-100 p-8">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold text-blue-300 flex items-center gap-2">
+        💰 Transacciones del Día
+      </h1>
+      <button
+        @click="fetch"
+        class="bg-blue-600 hover:bg-blue-700 transition
+               text-white px-3 py-1 rounded-lg text-sm"
+      >
+        🔄 Refrescar
       </button>
-    </h1>
-
-    <!-- Acciones principales -->
-    <div class="flex flex-wrap gap-3 mb-6">
-      <button @click="fetch" class="btn-blue">🔄 Refrescar</button>
-      <button @click="openCloseCashModal" class="btn-green">🧾 Cerrar Caja</button>
-      <button @click="generateReport" class="btn-yellow">📊 Generar Reporte</button>
     </div>
 
-    <!-- Estado -->
-    <div v-if="loading" class="text-gray-600 italic">Cargando transacciones...</div>
-    <div v-if="error" class="text-red-600 font-semibold">{{ error }}</div>
+    <!-- Acciones -->
+    <div class="flex flex-wrap gap-3 mb-6">
+      <button @click="fetch" class="btn btn-blue">🔄 Refrescar</button>
+      <button @click="openCloseCashModal" class="btn btn-green">🧾 Cerrar Caja</button>
+      <button @click="generateReport" class="btn btn-yellow">📊 Generar Reporte</button>
+    </div>
 
-    <!-- Lista -->
-    <table v-if="transactions.length" class="w-full bg-white rounded-lg shadow border border-gray-200">
-      <thead class="bg-blue-800 text-white">
-        <tr>
-          <th class="p-3 text-left">#</th>
-          <th class="p-3 text-left">Cliente</th>
-          <th class="p-3 text-left">Moneda</th>
-          <th class="p-3 text-right">Gramos</th>
-          <th class="p-3 text-right">Total (PEN)</th>
-          <th class="p-3 text-center">Hora</th>
-          <th class="p-3 text-center">Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(t, i) in transactions" :key="t.id" class="border-b hover:bg-blue-50 transition">
-          <td class="p-3">{{ i + 1 }}</td>
-          <td class="p-3">{{ t.client_name || 'Sin nombre' }}</td>
-          <td class="p-3">{{ t.moneda }}</td>
-          <td class="p-3 text-right">{{ formatNumber(t.grams) }}</td>
-          <td class="p-3 text-right font-semibold text-blue-700">{{ formatNumber(t.total_pen) }}</td>
-          <td class="p-3 text-center">{{ formatDate(t.created_at) }}</td>
-          <td class="p-3 text-center space-x-3">
-            <button @click="openView(t)" class="text-blue-600 hover:underline">Ver</button>
-            <button @click="openEdit(t)" class="text-amber-600 hover:underline">Editar</button>
-            <button @click="removeTransaction(t.id)" class="text-red-600 hover:underline">Eliminar</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <!-- Estados -->
+    <div v-if="loading" class="text-slate-400 italic">
+      ⏳ Cargando transacciones...
+    </div>
+    <div v-if="error" class="text-red-400 font-semibold">
+      {{ error }}
+    </div>
 
-    <div v-else class="text-gray-600 mt-6">No hay transacciones registradas hoy.</div>
+    <!-- Tabla -->
+    <div
+      v-if="transactions.length"
+      class="overflow-x-auto bg-[#12244a] border border-white/10
+             rounded-xl shadow-lg"
+    >
+      <table class="w-full text-sm">
+        <thead class="bg-blue-900/40 text-blue-200">
+          <tr>
+            <th class="p-3 text-left">#</th>
+            <th class="p-3 text-left">Cliente</th>
+            <th class="p-3 text-left">Moneda</th>
+            <th class="p-3 text-right">Gramos</th>
+            <th class="p-3 text-right">Total (PEN)</th>
+            <th class="p-3 text-center">Hora</th>
+            <th class="p-3 text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="(t, i) in transactions"
+            :key="t.id"
+            class="border-t border-white/5 hover:bg-blue-900/20 transition"
+          >
+            <td class="p-3">{{ i + 1 }}</td>
+            <td class="p-3">{{ t.client_name || 'Sin nombre' }}</td>
+            <td class="p-3">{{ t.moneda }}</td>
+            <td class="p-3 text-right">{{ formatNumber(t.grams) }}</td>
+            <td class="p-3 text-right font-semibold text-green-400">
+              {{ formatNumber(t.total_pen) }}
+            </td>
+            <td class="p-3 text-center text-slate-300">
+              {{ formatDate(t.created_at) }}
+            </td>
+            <td class="p-3 text-center space-x-3">
+              <button @click="openView(t)" class="action view">Ver</button>
+              <button @click="openEdit(t)" class="action edit">Editar</button>
+              <button @click="removeTransaction(t.id)" class="action delete">
+                Eliminar
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div v-else class="text-slate-400 mt-6 italic">
+      No hay transacciones registradas hoy.
+    </div>
 
     <!-- Modal Detalle -->
     <Modal v-if="showViewModal" @close="closeModal" title="Detalle de Transacción">
-      <div class="space-y-2 text-gray-800">
+      <div class="space-y-2 text-slate-800">
         <p><strong>Cliente:</strong> {{ selected.client_name }}</p>
         <p><strong>Moneda:</strong> {{ selected.moneda }}</p>
         <p><strong>Gramos:</strong> {{ formatNumber(selected.grams) }}</p>
@@ -63,7 +92,7 @@
 
     <!-- Modal Edición -->
     <Modal v-if="showEditModal" @close="closeModal" title="Editar Transacción">
-      <form @submit.prevent="submitEdit" class="space-y-3 text-gray-800">
+      <form @submit.prevent="submitEdit" class="space-y-3">
         <input v-model="form.client_name" placeholder="Cliente" class="input" />
         <input v-model.number="form.grams" type="number" placeholder="Gramos" class="input" />
         <input v-model.number="form.total_pen" type="number" placeholder="Total PEN" class="input" />
@@ -72,15 +101,21 @@
           <option value="USD">USD</option>
           <option value="BOB">BOB</option>
         </select>
-        <button class="btn-blue w-full" type="submit">💾 Guardar cambios</button>
+        <button class="btn btn-blue w-full" type="submit">
+          💾 Guardar cambios
+        </button>
       </form>
     </Modal>
 
-    <!-- Modal Cierre de Caja -->
+    <!-- Modal Cierre Caja -->
     <Modal v-if="showCloseCashModal" @close="closeModal" title="Cerrar Caja">
-      <div class="text-gray-800 space-y-3">
-        <p>¿Seguro que deseas cerrar la caja del día? Esto registrará los balances finales y generará el reporte.</p>
-        <button @click="closeCashRegister" class="btn-green w-full">✅ Confirmar Cierre</button>
+      <div class="space-y-4">
+        <p class="text-slate-700">
+          ¿Seguro que deseas cerrar la caja del día?
+        </p>
+        <button @click="closeCashRegister" class="btn btn-green w-full">
+          ✅ Confirmar Cierre
+        </button>
       </div>
     </Modal>
   </div>
@@ -143,22 +178,20 @@ async function removeTransaction(id) {
   fetch()
 }
 
-// Cierre de caja
 function openCloseCashModal() {
   showCloseCashModal.value = true
 }
 async function closeCashRegister() {
   try {
     await axios.post('/api/caja/cerrar')
-    alert('✅ Caja cerrada y reporte generado correctamente.')
+    alert('✅ Caja cerrada correctamente.')
     showCloseCashModal.value = false
     fetch()
-  } catch (e) {
+  } catch {
     alert('❌ Error al cerrar la caja.')
   }
 }
 
-// Generar reporte simple (descarga CSV)
 function generateReport() {
   const csv = [
     ['Cliente', 'Moneda', 'Gramos', 'Total PEN', 'Fecha'],
@@ -169,15 +202,13 @@ function generateReport() {
       t.total_pen,
       new Date(t.created_at).toLocaleString()
     ])
-  ]
-    .map(row => row.join(','))
-    .join('\n')
+  ].map(r => r.join(',')).join('\n')
 
   const blob = new Blob([csv], { type: 'text/csv' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `reporte_transacciones_${new Date().toISOString().slice(0, 10)}.csv`
+  a.download = `reporte_${new Date().toISOString().slice(0, 10)}.csv`
   a.click()
 }
 
@@ -191,40 +222,44 @@ onMounted(fetch)
 </script>
 
 <style scoped>
-.btn-blue {
-  background-color: #2563eb;
-  color: white;
-  padding: 8px 12px;
-  border-radius: 6px;
+.btn {
+  padding: 8px 14px;
+  border-radius: 8px;
   font-size: 14px;
+  font-weight: 600;
   transition: 0.2s;
+}
+.btn-blue {
+  background: #2563eb;
+  color: white;
 }
 .btn-blue:hover {
-  background-color: #1d4ed8;
+  background: #1d4ed8;
 }
 .btn-green {
-  background-color: #16a34a;
+  background: #16a34a;
   color: white;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 14px;
-  transition: 0.2s;
 }
 .btn-green:hover {
-  background-color: #15803d;
+  background: #15803d;
 }
 .btn-yellow {
-  background-color: #facc15;
+  background: #facc15;
   color: #000;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 14px;
 }
+
+.action {
+  font-size: 13px;
+  text-decoration: underline;
+}
+.action.view { color: #60a5fa; }
+.action.edit { color: #fbbf24; }
+.action.delete { color: #f87171; }
+
 .input {
   width: 100%;
   padding: 8px;
-  border: 1px solid #d1d5db;
   border-radius: 6px;
+  border: 1px solid #d1d5db;
 }
 </style>

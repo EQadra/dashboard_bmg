@@ -7,58 +7,57 @@ const api = useAxios()
 
 export const useDashboardStore = defineStore('dashboard', {
   state: () => ({
-    goldPrices: [],
-    userStats: {},
     kpis: [],
+    goldPrices: {
+      labels: [],
+      data: [],
+    },
+    userDistribution: {
+      labels: [],
+      data: [],
+    },
     loading: false,
     error: null,
   }),
 
   actions: {
-    /** 🔹 Cargar datos del dashboard */
-    async fetchDashboardData() {
+    /** 📊 Cargar KPIs */
+    async fetchStats() {
       this.loading = true
-      this.error = null
-
-      console.group('%c📊 DASHBOARD FETCH START', 'color: #16a34a; font-weight: bold;')
       try {
-        // ✅ Asegura cookie CSRF si usas Sanctum
         await getCsrfToken()
-
-        const { data } = await api.get('/api/admin/dashboard')
-
-        // ✅ Asignaciones con fallback
-        this.goldPrices = data.goldPrices || []
-        this.userStats = data.userStats || {}
-        this.kpis = data.kpis || []
-
-        console.log('💰 Precios del oro:', this.goldPrices)
-        console.log('👥 Estadísticas de usuarios:', this.userStats)
-        console.log('📈 KPIs:', this.kpis)
+        const { data } = await api.get('/api/admin/dashboard/stats')
+        this.kpis = data.data || []
       } catch (err) {
-        this.error = err.response?.data?.message || 'Error al cargar el dashboard'
-        console.error('❌ Error al obtener dashboard:', err.response?.data || err.message)
+        this.error = err.response?.data?.message || 'Error KPIs'
       } finally {
         this.loading = false
-        console.groupEnd()
       }
     },
 
-    /** 🔹 Cargar reportes administrativos */
-    async fetchReportes() {
-      console.group('%c📄 FETCH REPORTES', 'color: #2563eb; font-weight: bold;')
+    /** 📈 Cargar gráficos */
+    async fetchCharts() {
+      this.loading = true
       try {
-        await getCsrfToken() // opcional si backend requiere cookie activa
+        await getCsrfToken()
+        const { data } = await api.get('/api/admin/dashboard/charts')
 
-        const { data } = await api.get('/api/reportes')
-        console.log('📥 Respuesta de /api/reportes:', data)
-        console.groupEnd()
-        return data
+        this.goldPrices = data.data?.goldPrices ?? { labels: [], data: [] }
+        this.userDistribution = data.data?.userDistribution ?? { labels: [], data: [] }
       } catch (err) {
-        console.error('❌ Error al obtener reportes:', err.response?.data || err.message)
-        console.groupEnd()
-        throw new Error(err.response?.data?.message || 'Error al obtener reportes')
+        this.error = err.response?.data?.message || 'Error gráficos'
+      } finally {
+        this.loading = false
       }
+    },
+
+    /** 🚀 Cargar TODO el dashboard */
+    async fetchDashboardData() {
+      this.error = null
+      await Promise.all([
+        this.fetchStats(),
+        this.fetchCharts(),
+      ])
     },
   },
 })

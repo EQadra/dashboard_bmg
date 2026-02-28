@@ -2,7 +2,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { useAxios, setupAxios } from '../plugins/axios'
-import { getCsrfToken } from '../utils/csrf' // ✅ Usa el helper global
+import { getCsrfToken } from '../utils/csrf'
 
 let api
 try {
@@ -27,7 +27,7 @@ export const usePermissionsStore = defineStore('permissions', () => {
     loading.value = true
     error.value = null
     try {
-      const res = await api.get('/api/permisos')
+      const res = await api.get('/api/permisos') // ruta CRUD permisos
       permissions.value = normalize(res)
       console.log('✅ Permisos cargados:', permissions.value)
       return permissions.value
@@ -44,7 +44,7 @@ export const usePermissionsStore = defineStore('permissions', () => {
     loading.value = true
     error.value = null
     try {
-      await getCsrfToken() // ✅ Reemplaza ensureCsrfToken
+      await getCsrfToken()
       const res = await api.post('/api/permisos', { name })
       const created = normalize(res)
       if (created && created.id) permissions.value.push(created)
@@ -77,14 +77,14 @@ export const usePermissionsStore = defineStore('permissions', () => {
     }
   }
 
-  // ======= ROLES Y ASIGNACIÓN DE PERMISOS =======
+  // ======= ROLES Y PERMISOS =======
   const fetchRolesWithPermissions = async () => {
     loading.value = true
     error.value = null
     try {
-      const res = await api.get('/api/roles-permissions')
+      const res = await api.get('/api/roles') // Trae todos los roles
       roles.value = normalize(res)
-      console.log('✅ Roles y permisos cargados:', roles.value)
+      console.log('✅ Roles cargados:', roles.value)
       return roles.value
     } catch (err) {
       console.error('❌ Error al cargar roles:', err)
@@ -99,8 +99,11 @@ export const usePermissionsStore = defineStore('permissions', () => {
     loading.value = true
     error.value = null
     try {
+      // 🔹 Nota: Laravel espera /roles/{role}/permissions
       const res = await api.get(`/api/roles/${roleId}/permissions`)
-      return normalize(res)
+      const perms = normalize(res)
+      console.log(`✅ Permisos del rol ${roleId}:`, perms)
+      return perms
     } catch (err) {
       console.error('❌ Error al cargar permisos del rol:', err)
       error.value = err.response?.data?.message || 'Error al cargar permisos del rol'
@@ -110,14 +113,34 @@ export const usePermissionsStore = defineStore('permissions', () => {
     }
   }
 
+  const assignPermission = async (roleId, permissionName) => {
+    try {
+      await getCsrfToken()
+      await api.post(`/api/roles/${roleId}/permissions/assign`, { permission: permissionName })
+      console.log(`✅ Permiso ${permissionName} asignado al rol ${roleId}`)
+    } catch (err) {
+      console.error('❌ Error al asignar permiso:', err)
+      throw err
+    }
+  }
+
+  const revokePermission = async (roleId, permissionName) => {
+    try {
+      await getCsrfToken()
+      await api.post(`/api/roles/${roleId}/permissions/revoke`, { permission: permissionName })
+      console.log(`✅ Permiso ${permissionName} revocado del rol ${roleId}`)
+    } catch (err) {
+      console.error('❌ Error al revocar permiso:', err)
+      throw err
+    }
+  }
+
   const updateRolePermissions = async (roleId, permissionsList) => {
     loading.value = true
     error.value = null
     try {
       await getCsrfToken()
-      const res = await api.put(`/api/roles/${roleId}/permissions`, {
-        permissions: permissionsList,
-      })
+      const res = await api.put(`/api/roles/${roleId}/permissions`, { permissions: permissionsList })
       const updated = normalize(res)
 
       const idx = roles.value.findIndex((r) => r.id === roleId)
@@ -144,6 +167,8 @@ export const usePermissionsStore = defineStore('permissions', () => {
     deletePermission,
     fetchRolesWithPermissions,
     fetchRolePermissions,
+    assignPermission,
+    revokePermission,
     updateRolePermissions,
   }
 })

@@ -2,9 +2,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { useAxios } from '../plugins/axios'
-import { getCsrfToken } from '../utils/csrf' // ← DIRECTO
-
-const api = useAxios()
+import { getCsrfToken } from '../utils/csrf'
 
 export const useTransactionsStore = defineStore('transactions', () => {
   // --- Estados ---
@@ -33,8 +31,8 @@ export const useTransactionsStore = defineStore('transactions', () => {
     const ley = parseFloat(inputs.value.purity)
     const desc = parseFloat(inputs.value.discountPercentage) || 0
     const gramos = parseFloat(inputs.value.grams)
-    const valido = oz > 0 && tc > 0 && ley > 0 && gramos > 0
 
+    const valido = oz > 0 && tc > 0 && ley > 0 && gramos > 0
     if (!valido) return { valido: false }
 
     let pricePerGramUSD = 0
@@ -45,6 +43,7 @@ export const useTransactionsStore = defineStore('transactions', () => {
     }
 
     pricePerGramUSD *= (1 - desc / 100)
+
     const pricePerGramPEN = pricePerGramUSD * tc
     const totalPEN = pricePerGramPEN * gramos
     const totalUSD = totalPEN / tc
@@ -64,7 +63,7 @@ export const useTransactionsStore = defineStore('transactions', () => {
   const precioGramo = computed(() => computedResults.value.pricePerGramPEN || 0)
   const totalMoneda = computed(() => computedResults.value.totalPEN || 0)
 
-  // --- Limpiar ---
+  // --- Utilidades ---
   const clearAll = () => {
     inputs.value = {
       clientName: '',
@@ -80,7 +79,9 @@ export const useTransactionsStore = defineStore('transactions', () => {
     error.value = null
   }
 
-  const setValue = (key, val) => (inputs.value[key] = val)
+  const setValue = (key, val) => {
+    inputs.value[key] = val
+  }
 
   // --- GUARDAR TRANSACCIÓN ---
   const saveGoldCalculation = async () => {
@@ -89,7 +90,9 @@ export const useTransactionsStore = defineStore('transactions', () => {
     success.value = null
 
     try {
-      await getCsrfToken() // ← DIRECTO, SIN authStore
+      const api = useAxios() // ✅ AQUÍ (CORRECTO)
+
+      await getCsrfToken()
 
       const payload = {
         grams: inputs.value.grams,
@@ -109,15 +112,13 @@ export const useTransactionsStore = defineStore('transactions', () => {
         hora: new Date().toLocaleTimeString('es-PE', { hour12: false })
       }
 
-      const { data } = await api.post('/api/transactions', payload, {
-        withCredentials: true
-      })
+      const { data } = await api.post('/api/transactions', payload)
 
       success.value = data.message || 'Transacción guardada'
       await fetchToday()
       clearAll()
     } catch (e) {
-      console.error('Error al guardar:', e)
+      console.error('❌ Error al guardar:', e)
       error.value = e.response?.data?.message || 'Error al guardar transacción'
     } finally {
       loading.value = false
@@ -128,8 +129,11 @@ export const useTransactionsStore = defineStore('transactions', () => {
   const fetchToday = async () => {
     loading.value = true
     error.value = null
+
     try {
-      const res = await api.get('/api/transactions/day', { withCredentials: true })
+      const api = useAxios() // ✅ AQUÍ
+
+      const res = await api.get('/api/transactions/day')
       today.value = (res.data.data ?? []).map(t => ({
         id: t.id,
         client_name: t.client_name || 'Sin nombre',
@@ -141,7 +145,7 @@ export const useTransactionsStore = defineStore('transactions', () => {
         created_at: t.created_at || '-'
       }))
     } catch (e) {
-      console.error('Error al cargar:', e)
+      console.error('❌ Error al cargar:', e)
       error.value = 'No se pudo cargar las transacciones'
       today.value = []
     } finally {
@@ -152,13 +156,17 @@ export const useTransactionsStore = defineStore('transactions', () => {
   // --- ELIMINAR ---
   const remove = async (id) => {
     if (!confirm('¿Eliminar esta transacción?')) return
+
     loading.value = true
     try {
-      await getCsrfToken() // ← También aquí
-      await api.delete(`/api/transactions/${id}`, { withCredentials: true })
+      const api = useAxios() // ✅ AQUÍ
+
+      await getCsrfToken()
+      await api.delete(`/api/transactions/${id}`)
       today.value = today.value.filter(t => t.id !== id)
       success.value = 'Transacción eliminada'
     } catch (e) {
+      console.error('❌ Error al eliminar:', e)
       error.value = 'Error al eliminar'
     } finally {
       loading.value = false
@@ -171,6 +179,7 @@ export const useTransactionsStore = defineStore('transactions', () => {
     const totalUSD = today.value.reduce((s, t) => s + (t.total_usd || 0), 0)
     const totalBOB = today.value.reduce((s, t) => s + (t.total_bob || 0), 0)
     const totalGrams = today.value.reduce((s, t) => s + (t.grams || 0), 0)
+
     return { totalPEN, totalUSD, totalBOB, totalGrams }
   })
 

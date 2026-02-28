@@ -1,8 +1,6 @@
-// FILE: src/stores/useCashRegisterStore.js
 import { defineStore } from 'pinia'
 import { getCsrfToken } from '../utils/csrf'
-import { useAxios } from '../plugins/axios' // ✅ solo esto
-const api = useAxios() // ✅ usa la instancia global creada en main.js
+import { useAxios } from '../plugins/axios'
 
 export const useCashRegisterStore = defineStore('cashRegister', {
   state: () => ({
@@ -21,6 +19,7 @@ export const useCashRegisterStore = defineStore('cashRegister', {
       this.loading = true
       this.error = null
       try {
+        const api = useAxios() // ✅ AQUÍ SÍ
         const res = await api.get('/api/caja/actual')
         this.cashRegister = res.data.data
       } catch (err) {
@@ -42,13 +41,16 @@ export const useCashRegisterStore = defineStore('cashRegister', {
       this.loading = true
       this.error = null
       try {
+        const api = useAxios() // ✅ AQUÍ
         await getCsrfToken()
+
         const res = await api.post('/api/caja/abrir', {
           opening_cash_pen,
           opening_cash_bob,
           opening_cash_usd,
           opening_gold,
         })
+
         this.cashRegister = res.data.data
         return this.cashRegister
       } catch (err) {
@@ -70,13 +72,16 @@ export const useCashRegisterStore = defineStore('cashRegister', {
       this.loading = true
       this.error = null
       try {
+        const api = useAxios() // ✅ AQUÍ
         await getCsrfToken()
+
         const res = await api.post('/api/caja/cerrar', {
           closing_cash_pen,
           closing_cash_bob,
           closing_cash_usd,
           closing_gold,
         })
+
         this.cashRegister = res.data.data
         return this.cashRegister
       } catch (err) {
