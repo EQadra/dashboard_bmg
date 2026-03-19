@@ -91,10 +91,40 @@ onMounted(async () => {
 })
 
 // Crear permiso (sin cambios)
-const addPermission = async () => {
-  // ... tu código actual ...
-}
+ const addPermission = async () => {
+  if (!newPermission.value) return
 
+  try {
+    logs.value = `🔄 Creando permiso "${newPermission.value}"...`
+
+    const created = await store.createPermission(newPermission.value)
+
+    logs.value = `✅ Permiso "${created?.name || newPermission.value}" creado correctamente.`
+
+    newPermission.value = ''
+
+    Swal.fire({
+      title: 'Permiso creado',
+      text: `El permiso "${created?.name || ''}" fue agregado.`,
+      icon: 'success',
+      confirmButtonColor: '#10b981',
+      timer: 2000
+    })
+  } catch (err) {
+    console.error(err)
+
+    const msg = err.response?.data?.message || err.message || 'Error desconocido'
+
+    logs.value = `❌ Error al crear permiso: ${msg}`
+
+    Swal.fire({
+      title: 'Error',
+      text: msg,
+      icon: 'error',
+      confirmButtonColor: '#ef4444'
+    })
+  }
+}
 // ELIMINAR CON SWEETALERT2
 const deletePermission = async (id, name) => {
   const result = await Swal.fire({

@@ -5,8 +5,7 @@ let api // instancia compartida global
 
 export function setupAxios() {
   api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
-  //  baseURL: import.meta.env.VITE_API_URL || 'http://apierp.tradingbmgperu.com',
+   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
     withCredentials: true, // 🔥 Necesario para enviar/recibir cookies de Sanctum
     headers: {
       'X-Requested-With': 'XMLHttpRequest', // 🔥 Laravel requiere esto

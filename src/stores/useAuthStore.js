@@ -37,7 +37,7 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
     try {
       await getCsrfToken()
-      const { data } = await api.post('/api/login', { email, password })
+      const { data } = await api.post('/login', { email, password })
       saveUser(data)
       router.push('/dashboard')
       return data

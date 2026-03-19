@@ -26,6 +26,7 @@ import TransactionView from '../views/app/TransactionView.vue'
 import TransactionListView from '../views/app/TransactionListView.vue'
 import NewsView from '../views/app/NewsView.vue'
 import CashRegisterView from '../views/app/CashRegisterView.vue'
+import Company from '../views/app/CompanyView.vue'
 
 const routes = [
   { path: '/', redirect: { name: 'Login' } },
@@ -44,7 +45,9 @@ const routes = [
       { path: 'transactions', name: 'Transactions', component: TransactionView },
       { path: 'transaction-list', name: 'TransactionList', component: TransactionListView },
       { path: 'news', name: 'news', component: NewsView },
-      { path: 'cash-register', name: 'CashRegister', component: CashRegisterView }
+      { path: 'cash-register', name: 'CashRegister', component: CashRegisterView },
+      { path: 'company', name: 'company', component: Company }
+      
     ]
   },
 

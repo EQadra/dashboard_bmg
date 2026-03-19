@@ -43,6 +43,7 @@ const modules = reactive([
   { name: 'Transacción', icon: CreditCard, to: '/dashboard/transactions' },
   { name: 'Lista Transacciones', icon: ListOrdered, to: '/dashboard/transaction-list' },
   { name: 'Apertura de caja', icon: Wallet, to: '/dashboard/cash-register' },
+  { name: 'Empresa', icon: Wallet, to: '/dashboard/company' },
 ])
 </script>
 
