@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   Users,
   ChevronDown,
+  Castle,
   Moon,
   Sun,
   LogOut,
@@ -28,6 +29,8 @@ const handleLogout = async () => {
 
 // 📦 MODULES (NO SE TOCA)
 const modules = reactive([
+    { name: 'Empresa', icon: Castle, to: '/dashboard/company' },
+
   { name: 'Usuarios', icon: Users, to: '/admin/user-management' },
   {
     name: 'Autorización',
@@ -39,11 +42,11 @@ const modules = reactive([
       { name: 'Roles y permisos', icon: Lock, to: '/admin/role-has-permission' },
     ],
   },
-  { name: 'Lista Promociones', icon: Tag, to: '/dashboard/news' },
+  { name: 'Apertura de caja', icon: Wallet, to: '/dashboard/cash-register' },
   { name: 'Transacción', icon: CreditCard, to: '/dashboard/transactions' },
   { name: 'Lista Transacciones', icon: ListOrdered, to: '/dashboard/transaction-list' },
-  { name: 'Apertura de caja', icon: Wallet, to: '/dashboard/cash-register' },
-  { name: 'Empresa', icon: Wallet, to: '/dashboard/company' },
+  { name: 'Lista de Noticias', icon: Tag, to: '/dashboard/news' },
+
 ])
 </script>
 

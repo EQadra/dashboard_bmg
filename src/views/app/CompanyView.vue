@@ -23,40 +23,34 @@ const createCompany = async () => {
 </script>
 
 <template>
-<div class="min-h-screen bg-gray-50 p-10">
+<div class="company-page">
 
     <!-- TITLE -->
-    <h1 class="text-3xl font-bold text-gray-800 mb-8">
+    <h1 class="title">
         Companies
     </h1>
 
     <!-- FORM -->
-    <div class="bg-white shadow-lg rounded-xl p-6 mb-8 border border-gray-100">
+    <div class="card">
 
-        <h2 class="text-lg font-semibold text-gray-700 mb-4">
+        <h2 class="card-title">
             Create Company
         </h2>
 
-        <div class="flex flex-col md:flex-row gap-4">
+        <div class="form">
 
             <input
                 v-model="name"
                 placeholder="Company name"
-                class="flex-1 border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none p-3 rounded-lg transition"
+                class="input"
             />
 
-            <select
-                v-model="plan"
-                class="border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none p-3 rounded-lg transition"
-            >
+            <select v-model="plan" class="input">
                 <option value="free">Free</option>
                 <option value="pro">Pro</option>
             </select>
 
-            <button
-                @click="createCompany"
-                class="bg-blue-600 hover:bg-blue-700 transition text-white font-medium px-6 py-3 rounded-lg shadow"
-            >
+            <button @click="createCompany" class="btn-primary">
                 Create
             </button>
 
@@ -65,60 +59,44 @@ const createCompany = async () => {
     </div>
 
     <!-- TABLE -->
-    <div class="bg-white shadow-lg rounded-xl overflow-hidden border border-gray-100">
+    <div class="card table-card">
 
-        <table class="w-full text-sm text-left">
+        <table class="table">
 
-            <thead class="bg-gray-100 text-gray-700 uppercase text-xs tracking-wider">
+            <thead>
                 <tr>
-                    <th class="p-4">ID</th>
-                    <th class="p-4">Name</th>
-                    <th class="p-4">Slug</th>
-                    <th class="p-4">Plan</th>
-                    <th class="p-4">Actions</th>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Slug</th>
+                    <th>Plan</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
 
             <tbody>
 
-                <tr
-                    v-for="company in store.companies"
-                    :key="company.id"
-                    class="border-t hover:bg-gray-50 transition"
-                >
+                <tr v-for="company in store.companies" :key="company.id">
 
-                    <td class="p-4 font-medium text-gray-700">
-                        {{ company.id }}
-                    </td>
+                    <td>{{ company.id }}</td>
+                    <td>{{ company.name }}</td>
+                    <td class="muted">{{ company.slug }}</td>
 
-                    <td class="p-4 text-gray-700">
-                        {{ company.name }}
-                    </td>
-
-                    <td class="p-4 text-gray-500">
-                        {{ company.slug }}
-                    </td>
-
-                    <td class="p-4">
+                    <td>
                         <span
-                            class="px-3 py-1 text-xs font-semibold rounded-full"
-                            :class="company.plan === 'pro'
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-gray-200 text-gray-700'"
+                            class="badge"
+                            :class="company.plan === 'pro' ? 'pro' : 'free'"
                         >
                             {{ company.plan }}
                         </span>
                     </td>
 
-                    <td class="p-4">
-
+                    <td>
                         <button
                             @click="store.deleteCompany(company.id)"
-                            class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-xs font-medium transition shadow"
+                            class="btn-danger"
                         >
                             Delete
                         </button>
-
                     </td>
 
                 </tr>
@@ -131,3 +109,142 @@ const createCompany = async () => {
 
 </div>
 </template>
+
+<style scoped>
+.company-page {
+  min-height: 100vh;
+  padding: 30px;
+  background: linear-gradient(135deg, #0a1a2f, #1e3c72);
+  color: #fff;
+}
+
+/* TITLE */
+.title {
+  font-size: 26px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #FFD700;
+}
+
+/* CARD */
+.card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 25px;
+}
+
+/* FORM */
+.card-title {
+  margin-bottom: 15px;
+  color: #FFD700;
+}
+
+.form {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* INPUTS */
+.input {
+  flex: 1;
+  min-width: 150px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  outline: none;
+}
+
+.input::placeholder {
+  color: #aaa;
+}
+
+.input:focus {
+  border-color: #FFD700;
+}
+
+/* BUTTONS */
+.btn-primary {
+  background: #2563eb;
+  color: white;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-primary:hover {
+  background: #1d4ed8;
+}
+
+.btn-danger {
+  background: #ef4444;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-danger:hover {
+  background: #dc2626;
+}
+
+/* TABLE */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  text-align: left;
+  padding: 12px;
+  color: #FFD700;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.table td {
+  padding: 12px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.table tr:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+/* BADGES */
+.badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.badge.free {
+  background: rgba(255,255,255,0.1);
+}
+
+.badge.pro {
+  background: rgba(34,197,94,0.2);
+  color: #22c55e;
+}
+
+/* TEXT */
+.muted {
+  color: #aaa;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .form {
+    flex-direction: column;
+  }
+}
+</style>
