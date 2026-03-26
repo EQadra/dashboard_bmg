@@ -1,177 +1,251 @@
-<!-- views/UserManagement.vue -->
 <template>
-  <div class="p-6">
-    <!-- Título principal -->
-    <h1 class="text-2xl font-bold mb-6 text-gray-900">
-      Gestión de Usuarios
-    </h1>
+  <div class="p-6 bg-gray-900 min-h-screen">
 
-    <!-- Tabla de usuarios -->
-    <div class="overflow-x-auto bg-white rounded-lg shadow">
-      <table class="w-full border border-gray-300 text-sm">
-        <thead class="bg-gray-100">
+    <!-- HEADER -->
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-2xl font-bold text-blue-400">
+        Gestión de Usuarios
+      </h1>
+
+      <button
+        @click="showModal = true"
+        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+      >
+        + Nuevo Usuario
+      </button>
+    </div>
+
+    <!-- TABLA -->
+    <div class="overflow-x-auto bg-gray-800 rounded-lg shadow">
+      <table class="w-full border border-gray-700 text-sm text-blue-300">
+        <thead class="bg-gray-900">
           <tr>
-            <th class="px-4 py-2 border text-left text-gray-900">ID</th>
-            <th class="px-4 py-2 border text-left text-gray-900">Nombre</th>
-            <th class="px-4 py-2 border text-left text-gray-900">Email</th>
-            <th class="px-4 py-2 border text-left text-gray-900">Rol</th>
-            <th class="px-4 py-2 border text-center text-gray-900">Acciones</th>
+            <th class="px-4 py-2 border border-gray-700 text-left">ID</th>
+            <th class="px-4 py-2 border border-gray-700 text-left">Nombre</th>
+            <th class="px-4 py-2 border border-gray-700 text-left">Email</th>
+            <th class="px-4 py-2 border border-gray-700 text-left">Rol</th>
+            <th class="px-4 py-2 border border-gray-700 text-left">Empresa</th>
+            <th class="px-4 py-2 border border-gray-700 text-center">Acciones</th>
           </tr>
         </thead>
+
         <tbody>
           <tr
             v-for="user in usersStore.users"
             :key="user.id"
-            class="hover:bg-gray-50 transition-colors"
+            class="hover:bg-gray-700"
           >
-            <td class="px-4 py-2 border text-gray-900">{{ user.id }}</td>
-            <td class="px-4 py-2 border text-gray-900">{{ user.name }}</td>
-            <td class="px-4 py-2 border text-gray-900">{{ user.email }}</td>
-            <td class="px-4 py-2 border text-gray-900">
-              {{ user.roles?.length ? user.roles[0].name : "Sin rol" }}
+            <td class="px-4 py-2 border border-gray-700">{{ user.id }}</td>
+            <td class="px-4 py-2 border border-gray-700">{{ user.name }}</td>
+            <td class="px-4 py-2 border border-gray-700">{{ user.email }}</td>
+
+            <td class="px-4 py-2 border border-gray-700">
+              {{ user.roles?.[0]?.name || "Sin rol" }}
             </td>
-            <td class="px-4 py-2 border text-center">
+
+            <td class="px-4 py-2 border border-gray-700">
+              {{ user.company?.name || "Sin empresa" }}
+            </td>
+
+            <td class="px-4 py-2 border border-gray-700 text-center">
               <button
                 @click="deleteUser(user.id)"
-                class="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
               >
                 Eliminar
               </button>
             </td>
           </tr>
+
           <tr v-if="!usersStore.users.length">
-            <td colspan="5" class="text-center py-4 text-gray-500">
-              No hay usuarios registrados.
+            <td colspan="6" class="text-center py-4 text-gray-400">
+              No hay usuarios
             </td>
           </tr>
         </tbody>
       </table>
     </div>
 
-    <!-- Formulario de creación -->
-    <div class="mt-6 bg-white p-4 rounded-lg shadow">
-      <h2 class="text-lg font-semibold mb-4 text-gray-900">Crear Usuario</h2>
-      <form @submit.prevent="createUser" class="flex flex-wrap gap-4">
-        <input
-          v-model.trim="newUser.name"
-          placeholder="Nombre"
-          class="px-3 py-2 border rounded w-full md:w-1/3 text-gray-900 bg-white border-gray-300 focus:ring-2 focus:ring-blue-400 outline-none"
-          required
-        />
-        <input
-          v-model.trim="newUser.email"
-          placeholder="Email"
-          type="email"
-          class="px-3 py-2 border rounded w-full md:w-1/3 text-gray-900 bg-white border-gray-300 focus:ring-2 focus:ring-blue-400 outline-none"
-          required
-        />
-        <input
-          v-model.trim="newUser.password"
-          placeholder="Contraseña"
-          type="password"
-          class="px-3 py-2 border rounded w-full md:w-1/3 text-gray-900 bg-white border-gray-300 focus:ring-2 focus:ring-blue-400 outline-none"
-          required
-        />
-        <select
-          v-model="newUser.role_id"
-          class="px-3 py-2 border rounded w-full md:w-1/3 text-gray-900 bg-white border-gray-300 focus:ring-2 focus:ring-blue-400 outline-none"
-          required
-        >
-          <option disabled value="">Seleccionar rol</option>
-          <option
-            v-for="role in rolesStore.roles"
-            :key="role.id"
-            :value="role.id"
+    <!-- MODAL -->
+    <div
+      v-if="showModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+    >
+      <div class="bg-gray-800 p-6 rounded-lg w-full max-w-2xl">
+
+        <h2 class="text-xl text-blue-300 mb-4">
+          Crear Usuario
+        </h2>
+
+        <form @submit.prevent="createUser" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          <input
+            v-model="newUser.name"
+            placeholder="Nombre"
+            class="px-3 py-2 bg-gray-900 border border-gray-700 text-blue-200 rounded"
+          />
+
+          <input
+            v-model="newUser.email"
+            type="email"
+            placeholder="Email"
+            class="px-3 py-2 bg-gray-900 border border-gray-700 text-blue-200 rounded"
+          />
+
+          <input
+            v-model="newUser.password"
+            type="password"
+            placeholder="Contraseña"
+            class="px-3 py-2 bg-gray-900 border border-gray-700 text-blue-200 rounded"
+          />
+
+          <!-- EMPRESA -->
+          <select
+            v-model="newUser.company_id"
+            class="px-3 py-2 bg-gray-900 border border-gray-700 text-blue-200 rounded"
           >
-            {{ role.name }}
-          </option>
-        </select>
-        <button
-          type="submit"
-          class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-        >
-          Crear
-        </button>
-      </form>
+            <option disabled value="">Seleccionar empresa</option>
+            <option
+              v-for="company in companyStore.companies"
+              :key="company.id"
+              :value="company.id"
+            >
+              {{ company.name }}
+            </option>
+          </select>
+
+          <!-- 🔥 FIX REAL DEL ROL -->
+          <select
+            v-model="newUser.role_name"
+            class="px-3 py-2 bg-gray-900 border border-gray-700 text-blue-200 rounded"
+          >
+            <option disabled value="">Seleccionar rol</option>
+            <option
+              v-for="role in rolesStore.roles"
+              :key="role.id"
+              :value="role.name"
+            >
+              {{ role.name }}
+            </option>
+          </select>
+
+          <!-- BOTONES -->
+          <div class="col-span-2 flex justify-end gap-2 mt-4">
+            <button
+              type="button"
+              @click="showModal = false"
+              class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+            >
+              Cancelar
+            </button>
+
+            <button
+              type="submit"
+              class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Crear
+            </button>
+          </div>
+
+        </form>
+      </div>
     </div>
 
-    <!-- Logs -->
-    <div class="mt-6 bg-gray-100 p-4 rounded-lg">
-      <h2 class="text-lg font-semibold mb-2 text-gray-900">Logs</h2>
-      <pre
-        class="text-xs text-gray-800 bg-gray-200 p-2 rounded max-h-60 overflow-y-auto"
-      >{{ logs }}</pre>
-    </div>
   </div>
 </template>
 
 <script setup>
+
 import { ref, onMounted } from "vue";
-import { useUsersStore } from "../../stores/useUsersStore";
-import { useRolesStore } from "../../stores/useRolesStore";
+import Swal from "sweetalert2";
+
+import { useUsersStore } from "@/stores/useUsersStore";
+import { useRolesStore } from "@/stores/useRolesStore";
+import { useCompanyStore } from "@/stores/useCompanyStore";
 
 const usersStore = useUsersStore();
 const rolesStore = useRolesStore();
+const companyStore = useCompanyStore();
 
-const logs = ref("Esperando acciones...");
+const showModal = ref(false);
+
 const newUser = ref({
   name: "",
   email: "",
   password: "",
-  role_id: "",
+  role_name: "",
+  company_id: "",
 });
 
 onMounted(async () => {
-  logs.value = "🔄 Cargando usuarios y roles...";
-  try {
-    await Promise.all([usersStore.fetchUsers(), rolesStore.fetchRoles()]);
-    logs.value = "✅ Usuarios y roles cargados correctamente.";
-  } catch (err) {
-    logs.value = "❌ Error cargando datos: " + (err.message || err);
-  }
+  await Promise.all([
+    usersStore.fetchUsers(),
+    rolesStore.fetchRoles(),
+    companyStore.fetchCompanies(),
+  ]);
 });
 
+/* =========================
+   CREAR USUARIO
+========================= */
 const createUser = async () => {
-  if (!newUser.value.name || !newUser.value.email || !newUser.value.password || !newUser.value.role_id) {
-    logs.value = "⚠️ Debes completar todos los campos antes de crear un usuario.";
-    return;
-  }
-
   try {
-    logs.value = "🔄 Creando usuario...";
 
-    // Convertir role_id → role.name para enviar lo que Laravel espera
-    const role = rolesStore.roles.find(r => r.id === newUser.value.role_id);
+    if (
+      !newUser.value.name ||
+      !newUser.value.email ||
+      !newUser.value.password ||
+      !newUser.value.company_id ||
+      !newUser.value.role_name
+    ) {
+      return Swal.fire("Error", "Completa todos los campos", "error");
+    }
 
     await usersStore.createUser({
       name: newUser.value.name,
       email: newUser.value.email,
       password: newUser.value.password,
-      roles: role ? [role.name] : [], // ✅ Laravel espera un array de nombres
+      company_id: newUser.value.company_id,
+      roles: [newUser.value.role_name], // 🔥 CLAVE
     });
 
-    logs.value = "✅ Usuario creado correctamente.";
-    newUser.value = { name: "", email: "", password: "", role_id: "" };
+    Swal.fire("Éxito", "Usuario creado correctamente", "success");
+
+    showModal.value = false;
+
+    newUser.value = {
+      name: "",
+      email: "",
+      password: "",
+      role_name: "",
+      company_id: "",
+    };
+
   } catch (err) {
-    logs.value = "❌ Error creando usuario: " + (err.response?.data?.message || err.message || err);
+    Swal.fire("Error", err.response?.data?.message || err.message, "error");
   }
 };
 
+/* =========================
+   ELIMINAR USUARIO
+========================= */
 const deleteUser = async (id) => {
-  if (!confirm(`¿Eliminar usuario con ID ${id}?`)) return;
+  const result = await Swal.fire({
+    title: "¿Eliminar usuario?",
+    text: "Esta acción no se puede deshacer",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Sí, eliminar",
+    cancelButtonText: "Cancelar"
+  });
+
+  if (!result.isConfirmed) return;
 
   try {
-    logs.value = `🔄 Eliminando usuario con ID ${id}...`;
     await usersStore.deleteUser(id);
-    logs.value = "✅ Usuario eliminado correctamente.";
+    Swal.fire("Eliminado", "Usuario eliminado correctamente", "success");
   } catch (err) {
-    logs.value = "❌ Error eliminando usuario: " + (err.message || err);
+    Swal.fire("Error", "No se pudo eliminar", "error");
   }
 };
 </script>
-
-<style scoped>
-table {
-  border-collapse: collapse;
-}
-</style>
