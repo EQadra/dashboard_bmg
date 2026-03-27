@@ -17,6 +17,7 @@ import {
   LogOut,
   Wallet,
   Lock,
+  Landmark,
 } from 'lucide-vue-next'
 
 const sidebarStore = useSidebarStore()
@@ -29,9 +30,11 @@ const handleLogout = async () => {
 
 // 📦 MODULES (NO SE TOCA)
 const modules = reactive([
+  { name: 'dashboard', icon: Landmark, to: '/dashboard' },
     { name: 'Empresa', icon: Castle, to: '/dashboard/company' },
 
   { name: 'Usuarios', icon: Users, to: '/admin/user-management' },
+  
   {
     name: 'Autorización',
     icon: ShieldCheck,
@@ -46,6 +49,7 @@ const modules = reactive([
   { name: 'Transacción', icon: CreditCard, to: '/dashboard/transactions' },
   { name: 'Lista Transacciones', icon: ListOrdered, to: '/dashboard/transaction-list' },
   { name: 'Lista de Noticias', icon: Tag, to: '/dashboard/news' },
+  
 
 ])
 </script>

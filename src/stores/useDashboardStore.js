@@ -13,16 +13,19 @@ export const useDashboardStore = defineStore('dashboard', {
   }),
 
   actions: {
-    async fetchDashboard() {
+async fetchDashboard() {
       this.loading = true
       try {
-        const { data } = await api.get('/api/admin/dashboard')
+        const res = await api.get('/api/admin/dashboard')
 
-        this.stats = data.data?.stats || []
-        this.charts = data.data?.charts || {}
-        this.caja = data.data?.caja || {}
+        console.log('🔥 RESPUESTA REAL:', res.data)
+
+        this.stats = res.data.data.stats
+        this.charts = res.data.data.charts
+        this.caja = res.data.data.caja
 
       } catch (e) {
+        console.error(e)
         this.error = e.response?.data?.message
       } finally {
         this.loading = false

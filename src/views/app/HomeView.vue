@@ -7,45 +7,56 @@
     </div>
 
     <div v-else>
-      <h2 class="header">📊 Dashboard POS</h2>
+      <h2 class="header my-5 text-3xl">📊 Dashboard POS</h2>
+
+      <!-- 🧪 DEBUG (puedes quitar luego) -->
+      <!-- <pre class="debug">{{ dashboard }}</pre> -->
 
       <!-- 🔹 STATS PRINCIPALES -->
       <div class="stats">
         <div v-for="(s, i) in dashboard.stats" :key="i" class="card">
-          <div class="card-content">
-            <div>
-              <p class="value">{{ s.value }}</p>
-              <p class="label">{{ s.label }}</p>
-            </div>
-          </div>
+          <p class="value">{{ formatNumber(s.value) }}</p>
+          <p class="label">{{ s.label }}</p>
         </div>
       </div>
 
-      <!-- 🔥 MÉTRICAS AVANZADAS -->
-      <h3 class="chart-title">📊 Métricas Avanzadas</h3>
+      <!-- 🔥 MÉTRICAS -->
+      <h3 class="chart-title my-5 text-3xl ">📊 Métricas</h3>
 
-      <div class="stats grid-6">
+      <div class="stats grid-3">
         <div v-for="(c, i) in extraCards" :key="i" class="card small">
-          <p class="value">{{ c.value }}</p>
+          <p class="value">{{ formatNumber(c.value) }}</p>
           <p class="label">{{ c.label }}</p>
         </div>
       </div>
 
       <!-- 🔹 GOLD CHART -->
-      <h3 class="chart-title">Precio del Oro (7 días)</h3>
-      <Line :data="goldChartData" :options="chartOptions" />
+      <h3 class="chart-title my-5 text-3xl">Precio del Oro</h3>
+      <div class="chart-box">
+        <Line
+          :key="JSON.stringify(goldChartData)"
+          :data="goldChartData"
+          :options="chartOptions"
+        />
+      </div>
 
-      <!-- 🔹 USERS -->
-      <h3 class="chart-title">Usuarios Activos</h3>
-      <Bar :data="usersChartData" :options="chartOptions" />
+      <!-- 🔹 USERS CHART -->
+      <h3 class="chart-title my-5 text-3xl">Usuarios</h3>
+      <div class="chart-box">
+        <Bar
+          :key="JSON.stringify(usersChartData)"
+          :data="usersChartData"
+          :options="chartOptions"
+        />
+      </div>
 
       <!-- 🔹 CAJA -->
       <div class="caja">
-        <h3>💰 Estado de Caja</h3>
-        <p>Apertura: {{ dashboard.caja.apertura }}</p>
-        <p>Cierre: {{ dashboard.caja.cierre }}</p>
-        <p>Saldo Inicial: S/ {{ dashboard.caja.saldo_inicial }}</p>
-        <p>Saldo Actual: S/ {{ dashboard.caja.saldo_actual }}</p>
+        <h3>💰 Caja</h3>
+        <p>Apertura: {{ dashboard.caja?.apertura }}</p>
+        <p>Cierre: {{ dashboard.caja?.cierre }}</p>
+        <p>Saldo Inicial: S/ {{ formatNumber(dashboard.caja?.saldo_inicial) }}</p>
+        <p>Saldo Actual: S/ {{ formatNumber(dashboard.caja?.saldo_actual) }}</p>
       </div>
 
     </div>
@@ -85,7 +96,15 @@ onMounted(() => {
 })
 
 /* =========================
-   📊 CHARTS
+   FORMAT
+========================= */
+const formatNumber = (value) => {
+  if (value === null || value === undefined) return 0
+  return Number(value).toLocaleString()
+}
+
+/* =========================
+   CHARTS
 ========================= */
 
 // GOLD
@@ -94,7 +113,7 @@ const goldChartData = computed(() => ({
   datasets: [
     {
       label: 'Oro',
-      data: dashboard.charts?.gold?.data || [],
+      data: (dashboard.charts?.gold?.data || []).map(v => v || 0.01),
       borderColor: '#FFD700',
       backgroundColor: 'rgba(255,215,0,0.3)'
     }
@@ -115,46 +134,40 @@ const usersChartData = computed(() => ({
 
 const chartOptions = {
   responsive: true,
+  maintainAspectRatio: false,
   plugins: {
     legend: { display: false }
   }
 }
 
 /* =========================
-   📊 MÉTRICAS AVANZADAS
+   MÉTRICAS
 ========================= */
-
 const extraCards = computed(() => {
   const stats = dashboard.stats || []
   const caja = dashboard.caja || {}
   const chart = dashboard.charts?.gold?.data || []
 
-  const ventasPen = stats.find(s => s.label.includes('PEN'))?.value || 0
-  const ventasUsd = stats.find(s => s.label.includes('USD'))?.value || 0
-  const ventasBob = stats.find(s => s.label.includes('BOB'))?.value || 0
-  const transacciones = stats.find(s => s.label.includes('Trans'))?.value || 0
+  const usuarios = stats.find(s => s.label === 'Usuarios')?.value || 0
+  const transacciones = stats.find(s => s.label === 'Transacciones')?.value || 0
+  const volumen = stats.find(s => s.label === 'Volumen')?.value || 0
 
-  const totalVentas = ventasPen + ventasUsd + ventasBob
-  const promedio = transacciones ? totalVentas / transacciones : 0
+  const promedio = transacciones ? volumen / transacciones : 0
 
   const max = chart.length ? Math.max(...chart) : 0
   const min = chart.length ? Math.min(...chart) : 0
-  const ultimo = chart[chart.length - 1] || 0
+  const ultimo = chart.length ? chart[chart.length - 1] : 0
 
   return [
-    { label: 'Total Ventas', value: totalVentas },
-    { label: 'Promedio Venta', value: promedio.toFixed(2) },
-    { label: 'Máximo Semana', value: max },
-    { label: 'Mínimo Semana', value: min },
-    { label: 'Último Registro', value: ultimo },
-    { label: 'Registros', value: chart.length },
-
-    { label: 'Caja Actual', value: caja.saldo_actual || 0 },
-    { label: 'Saldo Inicial', value: caja.saldo_inicial || 0 },
+    { label: 'Usuarios', value: usuarios },
     { label: 'Transacciones', value: transacciones },
-    { label: 'Ventas PEN', value: ventasPen },
-    { label: 'Ventas USD', value: ventasUsd },
-    { label: 'Ventas BOB', value: ventasBob },
+    { label: 'Volumen', value: volumen },
+    { label: 'Promedio', value: promedio.toFixed(2) },
+    { label: 'Máximo', value: max },
+    { label: 'Mínimo', value: min },
+    { label: 'Último', value: ultimo },
+    { label: 'Registros', value: chart.length },
+    { label: 'Caja Actual', value: caja.saldo_actual || 0 },
   ]
 })
 </script>
@@ -170,40 +183,42 @@ const extraCards = computed(() => {
 .header {
   text-align: center;
   color: #FFD700;
-  margin-bottom: 15px;
 }
 
-/* LOADER */
-.loader {
-  text-align: center;
-  margin-top: 50px;
+/* DEBUG */
+.debug {
+  background: black;
+  color: lime;
+  font-size: 10px;
+  padding: 10px;
+  margin-bottom: 10px;
+  max-height: 150px;
+  overflow: auto;
 }
 
 /* STATS */
 .stats {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-between;
+  gap: 10px;
 }
 
 .card {
-  width: 48%;
+  flex: 1 1 45%;
   background: rgba(255,255,255,0.05);
   border: 1px solid #FFD700;
   border-radius: 12px;
   padding: 10px;
-  margin-bottom: 10px;
 }
 
 .card.small {
-  width: 100%;
-  padding: 8px;
+  flex: 1 1 30%;
   text-align: center;
 }
 
 .value {
-  font-weight: bold;
   font-size: 16px;
+  font-weight: bold;
 }
 
 .label {
@@ -211,17 +226,16 @@ const extraCards = computed(() => {
   color: #aaa;
 }
 
-/* GRID 6 */
-.grid-6 {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 10px;
+/* GRID */
+.grid-3 {
+  display: flex;
+  flex-wrap: wrap;
 }
 
-/* CHARTS */
-.chart-title {
-  margin: 15px 0 10px;
-  color: #FFD700;
+/* CHART */
+.chart-box {
+  height: 300px;
+  margin-bottom: 20px;
 }
 
 /* CAJA */
@@ -229,24 +243,13 @@ const extraCards = computed(() => {
   background: white;
   color: black;
   padding: 15px;
-  border-radius: 20px;
-  margin-top: 20px;
+  border-radius: 12px;
 }
 
 /* RESPONSIVE */
-@media (max-width: 1200px) {
-  .grid-6 {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
 @media (max-width: 600px) {
-  .grid-6 {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
   .card {
-    width: 100%;
+    flex: 1 1 100%;
   }
 }
 </style>
