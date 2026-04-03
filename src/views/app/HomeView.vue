@@ -64,8 +64,10 @@
 </template>
 
 <script setup>
+import { storeToRefs } from 'pinia'
 import { onMounted, computed } from 'vue'
 import { useDashboardStore } from '../../stores/useDashboardStore'
+
 
 import { Line, Bar } from 'vue-chartjs'
 import {
